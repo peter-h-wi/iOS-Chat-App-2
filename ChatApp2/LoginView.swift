@@ -41,7 +41,7 @@ struct LoginView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     
-                    if isLoginMode {
+                    if !isLoginMode {
                         Button {
                             
                         } label: {
