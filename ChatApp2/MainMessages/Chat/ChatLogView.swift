@@ -134,41 +134,28 @@ struct ChatLogView: View {
         }
         .navigationTitle(chatUser?.email ?? "")
         .navigationBarTitleDisplayMode(.inline)
+        
     }
+    
+    static let emptyScrollToString = "Empty"
     
     private var messagesView: some View {
         ScrollView {
-            ForEach(vm.chatMessages) { message in
+            ScrollViewReader { scrollViewProxy in
                 VStack {
-                    if message.fromId == FirebaseManager.shared.auth.currentUser?.uid {
-                        HStack {
-                            Spacer()
-                            HStack {
-                                Text(message.text)
-                                    .foregroundColor(.white)
-                            }
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(8)
-                        }
-                    } else {
-                        HStack {
-                            HStack {
-                                Text(message.text)
-                                    .foregroundColor(.black)
-                            }
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            Spacer()
-                        }
+                    ForEach(vm.chatMessages) { message in
+                        MessageView(message: message)
+                    }
+                    
+                    HStack { Spacer() }
+                        .id(Self.emptyScrollToString)
+                }
+                .onReceive(vm.$chatMessages) { _ in
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        scrollViewProxy.scrollTo("Empty", anchor: .bottom)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.top, 8)
             }
-            
-            HStack { Spacer() }
         }
         .background(Color(.init(white: 0.95, alpha: 1)))
         .safeAreaInset(edge: .bottom) {
@@ -225,5 +212,40 @@ private struct DescriptionPlaceHolder: View {
                 .padding(.top, -4)
             Spacer()
         }
+    }
+}
+
+struct MessageView: View {
+    
+    let message: ChatMessage
+    
+    var body: some View {
+        VStack {
+            if message.fromId == FirebaseManager.shared.auth.currentUser?.uid {
+                HStack {
+                    Spacer()
+                    HStack {
+                        Text(message.text)
+                            .foregroundColor(.white)
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(8)
+                }
+            } else {
+                HStack {
+                    HStack {
+                        Text(message.text)
+                            .foregroundColor(.black)
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(8)
+                    Spacer()
+                }
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
     }
 }
