@@ -17,19 +17,7 @@ struct FirebaseConstants {
     static let email = "email"
 }
 
-struct ChatMessage: Identifiable {
-    var id: String { documentId }
-    let documentId: String
-    let fromId, toId, text: String
-    
-    init(documentId: String, data: [String: Any]) {
-        self.documentId = documentId
-        self.fromId = data[FirebaseConstants.fromId] as? String ?? ""
-        self.toId = data[FirebaseConstants.toId] as? String ?? ""
-        self.text = data[FirebaseConstants.text] as? String ?? ""
 
-    }
-}
 
 class ChatLogViewModel: ObservableObject {
     
@@ -66,8 +54,12 @@ class ChatLogViewModel: ObservableObject {
                 // only changes
                 querySnapshot?.documentChanges.forEach({ change in
                     if change.type == .added {
-                        let data = change.document.data()
-                        self.chatMessages.append(.init(documentId: change.document.documentID, data: data))
+                        do {
+                            let data = try change.document.data(as: ChatMessage.self)
+                            self.chatMessages.append(data)
+                        } catch {
+                            print(error)
+                        }
                     }
                 })
 //
@@ -90,6 +82,8 @@ class ChatLogViewModel: ObservableObject {
             .document(fromId)
             .collection(toId)
             .document()
+        
+        
         
         let messageData = [FirebaseConstants.fromId: fromId, FirebaseConstants.toId: toId, FirebaseConstants.text: self.chatText,FirebaseConstants.timestamp: Timestamp()] as [String : Any]
         

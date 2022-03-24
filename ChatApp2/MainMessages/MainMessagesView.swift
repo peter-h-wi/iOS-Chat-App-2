@@ -7,27 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
-import Firebase
-
-struct RecentMessage: Identifiable {
-    var id: String { documentId }
-    let documentId: String
-    let text, email: String
-    let fromId, toId: String
-    let profileImageUrl: String
-    let timestamp: Timestamp
-    
-    init(documentId: String, data: [String: Any]) {
-        self.documentId = documentId
-        self.text = data["text"] as? String ?? ""
-        self.fromId = data["fromId"] as? String ?? ""
-        self.toId = data["toId"] as? String ?? ""
-        self.profileImageUrl = data["profileImageUrl"] as? String ?? ""
-        self.email = data["email"] as? String ?? ""
-        self.timestamp = data["timestamp"] as? Timestamp ?? Timestamp(date: .now)
-    }
-}
-
+import FirebaseFirestoreSwift
 
 class MainMessagesViewModel: ObservableObject {
     
@@ -65,11 +45,19 @@ class MainMessagesViewModel: ObservableObject {
                     let docId = change.document.documentID
                     
                     if let index = self.recentMessages.firstIndex(where: { rm in
-                        return rm.documentId == docId
+                        return rm.id == docId
                     }) {
                         self.recentMessages.remove(at: index)
                     }
-                    self.recentMessages.insert(.init(documentId: docId, data: change.document.data()), at: 0)
+                    
+                    do {
+                        let rm = try change.document.data(as: RecentMessage.self)
+                        
+                        self.recentMessages.insert(rm, at: 0)
+
+                    } catch {
+                        print(error)
+                    }
                 })
             }
         
@@ -209,6 +197,7 @@ struct MainMessagesView: View {
                                 Text(recentMessage.email)
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(Color(.label))
+                                    .multilineTextAlignment(.leading)
                                 Text(recentMessage.text)
                                     .font(.system(size: 14))
                                     .foregroundColor(Color(.lightGray))
@@ -216,7 +205,7 @@ struct MainMessagesView: View {
                             }
                             Spacer()
                             
-                            Text("22d")
+                            Text(recentMessage.timestamp.description)
                                 .font(.system(size: 14, weight: .semibold))
                         }
                     }
