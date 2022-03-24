@@ -8,17 +8,6 @@
 import SwiftUI
 import Firebase
 
-struct FirebaseConstants {
-    static let fromId = "fromId"
-    static let toId = "toId"
-    static let text = "text"
-    static let timestamp = "timestamp"
-    static let profileImageUrl = "profileImageUrl"
-    static let email = "email"
-}
-
-
-
 class ChatLogViewModel: ObservableObject {
     
     @Published var chatText = ""
@@ -26,7 +15,7 @@ class ChatLogViewModel: ObservableObject {
     
     @Published var chatMessages = [ChatMessage]()
     
-    let chatUser: ChatUser?
+    var chatUser: ChatUser?
     
     init(chatUser: ChatUser?) {
         self.chatUser = chatUser
@@ -34,12 +23,16 @@ class ChatLogViewModel: ObservableObject {
         fetchMessages()
     }
     
-    private func fetchMessages() {
+    var firestoreListener: ListenerRegistration?
+    
+    func fetchMessages() {
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
         
         guard let toId = chatUser?.uid else { return }
+        firestoreListener?.remove()
+        chatMessages.removeAll()
         
-        FirebaseManager.shared.firestore
+        firestoreListener = FirebaseManager.shared.firestore
             .collection("messages")
             .document(fromId)
             .collection(toId)
@@ -57,6 +50,7 @@ class ChatLogViewModel: ObservableObject {
                         do {
                             let data = try change.document.data(as: ChatMessage.self)
                             self.chatMessages.append(data)
+                            print("Appending chatMessage in ChatLogView")
                         } catch {
                             print(error)
                         }
@@ -163,14 +157,6 @@ class ChatLogViewModel: ObservableObject {
 }
 
 struct ChatLogView: View {
-    
-    let chatUser: ChatUser?
-    
-    init(chatUser: ChatUser?) {
-        self.chatUser = chatUser
-        self.vm = ChatLogViewModel(chatUser: chatUser)
-    }
-        
     @ObservedObject var vm: ChatLogViewModel
     
     var body: some View {
@@ -178,8 +164,11 @@ struct ChatLogView: View {
             messagesView
             Text(vm.errorMessage)
         }
-        .navigationTitle(chatUser?.email ?? "")
+        .navigationTitle(vm.chatUser?.email ?? "")
         .navigationBarTitleDisplayMode(.inline)
+        .onDisappear {
+            vm.firestoreListener?.remove()
+        }
         
     }
     
@@ -243,7 +232,7 @@ struct ChatLogView: View {
 struct ChatLogView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            ChatLogView(chatUser: .init(data: ["uid": "qwdlO7NJnEWu4ELnsAsjGbfMrDS2", "email": "test6@gmail.com"]))
+            ChatLogView(vm: .init(chatUser: nil))
         }
     }
 }
