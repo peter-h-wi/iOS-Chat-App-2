@@ -8,4 +8,4 @@ Chat App to learn about Firebase sdk.
 
 |Name|Screenshots|Key Points
 |--|--|--|
-|[ChatApp2](ChatApp2)|<img src="Screenshots/frame_6.png" width="150"/><img src="Screenshots/record_1.gif" width="135"/>|1.Firebase<br>2.Firestore<br>3.Storage<br>4.Swift Package Manager
+|[ChatApp2](ChatApp2)|<img src="Screenshots/frame_6.png" width="150"/><img src="Screenshots/record_1.gif" width="270"/>|1.Firebase<br>2.Firestore<br>3.Storage<br>4.Swift Package Manager
